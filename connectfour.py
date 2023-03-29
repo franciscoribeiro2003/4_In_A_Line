@@ -156,20 +156,19 @@ def utility(table):
     #return uLine(table) + uColumn(table) + uDiagonal(table)
     l = uLine(table)
     c = uColumn(table)
-    print("uLine: %d\n" %l)
-    print("uColumn: %d\n" %c)
+    print("uLine: %d | uColumn: %d\n" %(l, c))
     return uLine(table) + uColumn(table)
 
 def uColumn(table):
     points = 0
     for c in range(COLS):
-        for r in range(ROWS-1, 1, -1):
+        if table[0][c] == '- ' and table[1][c] == '- ' and table[2][c] == '- ' and table[3][c] == '- ' and table[4][c] == '- ' and table[5][c] == '- ': continue
+
+        for r in range(ROWS-1, 4, -1):
             first = table[r][c]
             second = table[r - 1][c]
-            third = table[r - 3][c]
-            forth = table[r - 4][c]
-
-            if first == '- ' and second == '- ' and third == '- ' and forth == '- ': return points
+            third = table[r - 2][c]
+            forth = table[r - 3][c]
             
             #Points for X
             if first == 'X ':
@@ -229,13 +228,13 @@ def uLine(table):
     for l in range(ROWS-1, -1, -1):
         line = table[l]
 
+        if line == ['- ','- ','- ','- ','- ','- ','- ']: return points
+
         for i in range(4):
             first = line[i]
             second = line[i + 1]
             third = line[i + 2]
             forth = line[i + 3]
-
-            if first == '- ' and second == '- ' and third == '- ' and forth == '- ': return points
 
             #Points for X
             if first == 'X ':
