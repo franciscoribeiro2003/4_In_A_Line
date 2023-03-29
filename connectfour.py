@@ -26,7 +26,7 @@ def game(table):
         elif player == 'O':
             break
         else:
-            print("Please, pick or X or O")
+            print("Please, pick X or O")
 
     #Player chooses with difficulty he wants to play
     print("Choose the algorithm you want to play against:\n")
@@ -55,12 +55,12 @@ def game(table):
             
             else:
                 print("\nIt is now the CPU turn.")
-                col = cpuMove()
+                col = cpuMove(cpu, table)
 
         else:
             if currentSymbol == symbols[0]:
                 print("\nIt is now the CPU turn.")
-                col = cpuMove()
+                col = cpuMove(cpu, table)
 
             else:
                 print("\nIt is now your turn.")
@@ -71,6 +71,8 @@ def game(table):
             if table[row][col] == '- ':
                 table[row][col] = currentSymbol
                 break
+
+        print("Utilidade: " + str(utility(table)))
 
         #Verifying if there's a winner
         if check(table, currentSymbol):
@@ -113,8 +115,13 @@ def choice(table):
         return col
     
 #CPU picking column (USAR UMA FUNCAO QUE CALCULE MINIMAX, ALPHA BETA, MCTS)
-def cpuMove():
-    return random.randint(0,6)
+def cpuMove(cpu, table):
+    if cpu == 1:
+        return minimax(table)
+    elif cpu == 2:
+        return alphabeta(table)
+    else:
+        return mcts(table)
 
 #Checking if there's four in line
 def check(table, symbol):
@@ -143,5 +150,161 @@ def check(table, symbol):
                 return True
 
     return False
+
+#Points of a certain movement
+def utility(table):
+    #return uLine(table) + uColumn(table) + uDiagonal(table)
+    l = uLine(table)
+    c = uColumn(table)
+    print("uLine: %d\n" %l)
+    print("uColumn: %d\n" %c)
+    return uLine(table) + uColumn(table)
+
+def uColumn(table):
+    points = 0
+    for c in range(COLS):
+        for r in range(ROWS-1, 1, -1):
+            first = table[r][c]
+            second = table[r - 1][c]
+            third = table[r - 3][c]
+            forth = table[r - 4][c]
+
+            if first == '- ' and second == '- ' and third == '- ' and forth == '- ': return points
+            
+            #Points for X
+            if first == 'X ':
+                if second == '- ':
+                    if third == '- ' and forth == '- ': points += 1
+                    elif third == 'X ' and forth == '- ': points += 10
+                    elif third == 'X ' and forth == 'X ': points += 50
+                    else: continue
+
+                elif second == 'X ':
+                    if third == '- ' and forth == '- ': points += 10
+                    elif third == 'X ' and forth == '- ': points += 50
+                    elif third == 'X ' and forth == 'X ': points = 512
+                    else: continue        
+
+            #Points for O
+            elif first == 'O ':
+                if second == '- ':
+                    if third == '- ' and forth == '- ': points -= 1
+                    elif third == 'O ' and forth == '- ': points -= 10
+                    elif third == 'O ' and forth == 'O ': points -= 50
+                    else: continue
+
+                elif second == 'O ':
+                    if third == '- ' and forth == '- ': points -= 10
+                    elif third == 'O ' and forth == '- ': points -= 50
+                    elif third == 'O ' and forth == 'O ': points = -512
+                    else: continue
+
+            else:
+                #The - X sequence
+                if second == 'X ':
+                    if third == '- ' and forth == '- ': points += 1
+                    elif third == 'X ' and forth == '- ': points += 10
+                    elif third == 'X ' and forth == 'X ': points += 50
+                    else: continue
+                
+                #The - O sequence
+                elif second == 'O ':
+                    if third == '- ' and forth == '- ': points -= 1
+                    elif third == 'O ' and forth == '- ': points -= 10
+                    elif third == 'O ' and forth == 'O ': points -= 50
+                    else: continue
+
+                #The - - sequence
+                else:
+                    if (third == 'X ' and forth == '- ') or (third == '- ' and forth == 'X '): points += 1
+                    elif third == 'X ' and forth == 'X ': points += 10
+                    elif (third == 'O ' and forth == '- ') or (third == '- ' and forth == 'O '): points -= 1
+                    elif third == 'O ' and forth == 'O ': points -= 10
+                    else: continue
+
+    return points
+
+def uLine(table):
+    points = 0
+    for l in range(ROWS-1, -1, -1):
+        line = table[l]
+
+        for i in range(4):
+            first = line[i]
+            second = line[i + 1]
+            third = line[i + 2]
+            forth = line[i + 3]
+
+            if first == '- ' and second == '- ' and third == '- ' and forth == '- ': return points
+
+            #Points for X
+            if first == 'X ':
+                #The X - sequence
+                if second == '- ':
+                    if third == '- ' and forth == '- ': points += 1
+                    elif third == 'X ' and forth == '- ': points += 10
+                    elif third == 'X ' and forth == 'X ': points += 50
+                    else: continue
+                
+                #The X X sequence
+                elif second == 'X ':
+                    if third == '- ' and forth == '- ': points += 10
+                    elif third == 'X ' and forth == '- ': points += 50
+                    elif third == 'X ' and forth == 'X ': points = 512
+                    else: continue
+
+            #Points for O
+            elif first == 'O ':
+                #The O - sequence
+                if second == '- ':
+                    if third == '- ' and forth == '- ': points -= 1
+                    elif third == 'O ' and forth == '- ': points -= 10
+                    elif third == 'O ' and forth == 'O ': points -= 50
+                    else: continue
+
+                #The O O sequence
+                elif second == 'O ':
+                    if third == '- ' and forth == '- ': points -= 10
+                    elif third == 'O ' and forth == '- ': points -= 50
+                    elif third == 'O ' and forth == 'O ': points = -512
+                    else: continue
+            
+            #Check if there is a symbol after -
+            else:
+                #The - X sequence
+                if second == 'X ':
+                    if third == '- ' and forth == '- ': points += 1
+                    elif third == 'X ' and forth == '- ': points += 10
+                    elif third == 'X ' and forth == 'X ': points += 50
+                    else: continue
+                
+                #The - O sequence
+                elif second == 'O ':
+                    if third == '- ' and forth == '- ': points -= 1
+                    elif third == 'O ' and forth == '- ': points -= 10
+                    elif third == 'O ' and forth == 'O ': points -= 50
+                    else: continue
+
+                #The - - sequence
+                else:
+                    if (third == 'X ' and forth == '- ') or (third == '- ' and forth == 'X '): points += 1
+                    elif third == 'X ' and forth == 'X ': points += 10
+                    elif (third == 'O ' and forth == '- ') or (third == '- ' and forth == 'O '): points -= 1
+                    elif third == 'O ' and forth == 'O ': points -= 10
+                    else: continue
+
+    return points
+
+#Minimax Algorithm
+def minimax(table):
+    return random.randint(0,6)
+
+#Alpha Beta Algorithm
+def alphabeta(table):
+    return random.randint(0,6)
+
+#MCTS Algorithm
+def mcts(table):
+    return random.randint(0,6)
 
 game(table)
