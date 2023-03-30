@@ -67,8 +67,9 @@ def game(table):
                 print("\nIt is now your turn.")
                 print("Make a move by choosing your coordinates to play (1 to 7).")
                 col = choice(table)
-
-        move(table, currentSymbol, col)
+        
+        m = move(table, currentSymbol, col)
+        if m != -1: table[m][col] = currentSymbol
 
         #Verifying if there's a winner
         if check(table, currentSymbol):
@@ -121,16 +122,15 @@ def cpuMove(cpu, table, symbol):
         return mcts(table)
 
 #Makes the move and returns its utility value
-def move(table, symbol, col):
-    change = False
+def move(t, symbol, col):
+    row = -1
 
-    for row in range(ROWS-1, -1, -1): 
-        if table[row][col] == '- ':
-            table[row][col] = symbol
-            change = True
+    for r in range(ROWS-1, -1, -1): 
+        if t[r][col] == '- ':
+            row = r
             break
 
-    return change
+    return row
 
 #Checking if there's four in line
 def check(table, symbol):
@@ -249,7 +249,6 @@ def uDiagonal(table):
 
 #Minimax Algorithm
 def minimax(table, depth, symbol, col):
-    originalTable = table
     if depth == 0 or check(table, 'X ') or check(table, 'O '):
         return (utility(table), col)
     
@@ -258,16 +257,18 @@ def minimax(table, depth, symbol, col):
         bestMove = col
 
         for i in range(7):
-            if move(table, symbol, i):
-                values = minimax(table, depth - 1, 'O ', i)
+            cloneTable = [row[:] for row in table]
+            m = move(cloneTable, symbol, i)
+
+            if m != -1:
+                cloneTable[m][i] == symbol
+                values = minimax(cloneTable, depth - 1, 'O ', i)
                 eval = values[0]
 
                 if eval > maxEval:
                     maxEval = eval
                     bestMove = i
             else: continue
-
-            table = originalTable
         
         return (maxEval, bestMove)
     
@@ -276,8 +277,12 @@ def minimax(table, depth, symbol, col):
         bestMove = col
 
         for i in range(7):
-            if move(table, symbol, i):
-                values = minimax(table, depth - 1, 'X ', i)
+            cloneTable = [row[:] for row in table]
+            m = move(cloneTable, symbol, i)
+
+            if m != -1:
+                cloneTable[m][i] = symbol
+                values = minimax(cloneTable, depth - 1, 'X ', i)
                 eval = values[0]
 
                 if eval < minEval:
@@ -286,7 +291,6 @@ def minimax(table, depth, symbol, col):
 
             else: continue
 
-        table = originalTable
         return (minEval, bestMove)
 
 
