@@ -1,4 +1,5 @@
 import random
+import math
 
 table = [['- ','- ','- ','- ','- ','- ','- '],
          ['- ','- ','- ','- ','- ','- ','- '],
@@ -9,11 +10,11 @@ table = [['- ','- ','- ','- ','- ','- ','- '],
 
 ROWS = 6
 COLS = 7
+symbols = ['X ', 'O ']
 
 #Play the Game
 def game(table):
     print("Welcome to Connect Four! The player with the X piece start first.")
-    symbols = ['X ', 'O ']
     currentSymbol = symbols[0] #Player one
     first = False #Decides if human plays first or not
 
@@ -55,24 +56,19 @@ def game(table):
             
             else:
                 print("\nIt is now the CPU turn.")
-                col = cpuMove(cpu, table)
+                col = cpuMove(cpu, table, symbols[1])
 
         else:
             if currentSymbol == symbols[0]:
                 print("\nIt is now the CPU turn.")
-                col = cpuMove(cpu, table)
+                col = cpuMove(cpu, table, currentSymbol)
 
             else:
                 print("\nIt is now your turn.")
                 print("Make a move by choosing your coordinates to play (1 to 7).")
-                col = choice(table)                  
+                col = choice(table)
 
-        for row in range(ROWS-1, -1, -1): 
-            if table[row][col] == '- ':
-                table[row][col] = currentSymbol
-                break
-
-        print("Utilidade: " + str(utility(table)))
+        move(table, currentSymbol, col)
 
         #Verifying if there's a winner
         if check(table, currentSymbol):
@@ -115,13 +111,26 @@ def choice(table):
         return col
     
 #CPU picking column (USAR UMA FUNCAO QUE CALCULE MINIMAX, ALPHA BETA, MCTS)
-def cpuMove(cpu, table):
+def cpuMove(cpu, table, symbol):
     if cpu == 1:
-        return minimax(table)
+        values = minimax(table, 4, symbol, -1)
+        return values[1]
     elif cpu == 2:
         return alphabeta(table)
     else:
         return mcts(table)
+
+#Makes the move and returns its utility value
+def move(table, symbol, col):
+    change = False
+
+    for row in range(ROWS-1, -1, -1): 
+        if table[row][col] == '- ':
+            table[row][col] = symbol
+            change = True
+            break
+
+    return change
 
 #Checking if there's four in line
 def check(table, symbol):
@@ -157,6 +166,7 @@ def utility(table):
     elif check(table, 'O '): return -512
     return uLine(table) + uColumn(table) + uDiagonal(table)
 
+#Utility points from the lines
 def uLine(table):
     points = 0
 
@@ -183,6 +193,7 @@ def uLine(table):
 
     return points
 
+#Utility points from the column
 def uColumn(table):
     points = 0
 
@@ -209,6 +220,7 @@ def uColumn(table):
 
     return points
 
+#Utility points from the diagonals
 def uDiagonal(table):
     points = 0
 
@@ -236,8 +248,47 @@ def uDiagonal(table):
     return points
 
 #Minimax Algorithm
-def minimax(table):
-    return random.randint(0,6)
+def minimax(table, depth, symbol, col):
+    originalTable = table
+    if depth == 0 or check(table, 'X ') or check(table, 'O '):
+        return (utility(table), col)
+    
+    if symbol == 'X ':
+        maxEval = -math.inf
+        bestMove = col
+
+        for i in range(7):
+            if move(table, symbol, i):
+                values = minimax(table, depth - 1, 'O ', i)
+                eval = values[0]
+
+                if eval > maxEval:
+                    maxEval = eval
+                    bestMove = i
+            else: continue
+
+            table = originalTable
+        
+        return (maxEval, bestMove)
+    
+    else:
+        minEval = math.inf
+        bestMove = col
+
+        for i in range(7):
+            if move(table, symbol, i):
+                values = minimax(table, depth - 1, 'X ', i)
+                eval = values[0]
+
+                if eval < minEval:
+                    minEval = eval
+                    bestMove = i
+
+            else: continue
+
+        table = originalTable
+        return (minEval, bestMove)
+
 
 #Alpha Beta Algorithm
 def alphabeta(table):
