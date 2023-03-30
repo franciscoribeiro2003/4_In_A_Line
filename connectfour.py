@@ -153,144 +153,83 @@ def check(table, symbol):
 
 #Points of a certain movement
 def utility(table):
-    #return uLine(table) + uColumn(table) + uDiagonal(table)
-    l = uLine(table)
-    c = uColumn(table)
-    print("uLine: %d | uColumn: %d\n" %(l, c))
-    return uLine(table) + uColumn(table)
-
-def uColumn(table):
-    points = 0
-    for c in range(COLS):
-        if table[0][c] == '- ' and table[1][c] == '- ' and table[2][c] == '- ' and table[3][c] == '- ' and table[4][c] == '- ' and table[5][c] == '- ': continue
-
-        for r in range(ROWS-1, 4, -1):
-            first = table[r][c]
-            second = table[r - 1][c]
-            third = table[r - 2][c]
-            forth = table[r - 3][c]
-            
-            #Points for X
-            if first == 'X ':
-                if second == '- ':
-                    if third == '- ' and forth == '- ': points += 1
-                    elif third == 'X ' and forth == '- ': points += 10
-                    elif third == 'X ' and forth == 'X ': points += 50
-                    else: continue
-
-                elif second == 'X ':
-                    if third == '- ' and forth == '- ': points += 10
-                    elif third == 'X ' and forth == '- ': points += 50
-                    elif third == 'X ' and forth == 'X ': points = 512
-                    else: continue        
-
-            #Points for O
-            elif first == 'O ':
-                if second == '- ':
-                    if third == '- ' and forth == '- ': points -= 1
-                    elif third == 'O ' and forth == '- ': points -= 10
-                    elif third == 'O ' and forth == 'O ': points -= 50
-                    else: continue
-
-                elif second == 'O ':
-                    if third == '- ' and forth == '- ': points -= 10
-                    elif third == 'O ' and forth == '- ': points -= 50
-                    elif third == 'O ' and forth == 'O ': points = -512
-                    else: continue
-
-            else:
-                #The - X sequence
-                if second == 'X ':
-                    if third == '- ' and forth == '- ': points += 1
-                    elif third == 'X ' and forth == '- ': points += 10
-                    elif third == 'X ' and forth == 'X ': points += 50
-                    else: continue
-                
-                #The - O sequence
-                elif second == 'O ':
-                    if third == '- ' and forth == '- ': points -= 1
-                    elif third == 'O ' and forth == '- ': points -= 10
-                    elif third == 'O ' and forth == 'O ': points -= 50
-                    else: continue
-
-                #The - - sequence
-                else:
-                    if (third == 'X ' and forth == '- ') or (third == '- ' and forth == 'X '): points += 1
-                    elif third == 'X ' and forth == 'X ': points += 10
-                    elif (third == 'O ' and forth == '- ') or (third == '- ' and forth == 'O '): points -= 1
-                    elif third == 'O ' and forth == 'O ': points -= 10
-                    else: continue
-
-    return points
+    return uLine(table) + uColumn(table) + uDiagonal(table)
 
 def uLine(table):
     points = 0
-    for l in range(ROWS-1, -1, -1):
-        line = table[l]
 
-        if line == ['- ','- ','- ','- ','- ','- ','- ']: return points
+    for i in range(ROWS):
+        for j in range(4):
+            xCount = 0
+            oCount = 0
 
-        for i in range(4):
-            first = line[i]
-            second = line[i + 1]
-            third = line[i + 2]
-            forth = line[i + 3]
+            for k in range(j, j + 4):
+                if table[i][k] == 'X ': xCount += 1
+                elif table[i][k] == 'O ': oCount += 1
 
-            #Points for X
-            if first == 'X ':
-                #The X - sequence
-                if second == '- ':
-                    if third == '- ' and forth == '- ': points += 1
-                    elif third == 'X ' and forth == '- ': points += 10
-                    elif third == 'X ' and forth == 'X ': points += 50
-                    else: continue
-                
-                #The X X sequence
-                elif second == 'X ':
-                    if third == '- ' and forth == '- ': points += 10
-                    elif third == 'X ' and forth == '- ': points += 50
-                    elif third == 'X ' and forth == 'X ': points = 512
-                    else: continue
+            if xCount > 0 and oCount == 0:
+                if xCount == 1: points += 1
+                elif xCount == 2: points += 10
+                elif xCount == 3: points += 50
 
-            #Points for O
-            elif first == 'O ':
-                #The O - sequence
-                if second == '- ':
-                    if third == '- ' and forth == '- ': points -= 1
-                    elif third == 'O ' and forth == '- ': points -= 10
-                    elif third == 'O ' and forth == 'O ': points -= 50
-                    else: continue
+            elif xCount == 0 and oCount > 0:
+                if oCount == 1: points -= 1
+                elif oCount == 2: points -= 10
+                elif oCount == 3: points -= 50
 
-                #The O O sequence
-                elif second == 'O ':
-                    if third == '- ' and forth == '- ': points -= 10
-                    elif third == 'O ' and forth == '- ': points -= 50
-                    elif third == 'O ' and forth == 'O ': points = -512
-                    else: continue
-            
-            #Check if there is a symbol after -
-            else:
-                #The - X sequence
-                if second == 'X ':
-                    if third == '- ' and forth == '- ': points += 1
-                    elif third == 'X ' and forth == '- ': points += 10
-                    elif third == 'X ' and forth == 'X ': points += 50
-                    else: continue
-                
-                #The - O sequence
-                elif second == 'O ':
-                    if third == '- ' and forth == '- ': points -= 1
-                    elif third == 'O ' and forth == '- ': points -= 10
-                    elif third == 'O ' and forth == 'O ': points -= 50
-                    else: continue
+            else: continue
 
-                #The - - sequence
-                else:
-                    if (third == 'X ' and forth == '- ') or (third == '- ' and forth == 'X '): points += 1
-                    elif third == 'X ' and forth == 'X ': points += 10
-                    elif (third == 'O ' and forth == '- ') or (third == '- ' and forth == 'O '): points -= 1
-                    elif third == 'O ' and forth == 'O ': points -= 10
-                    else: continue
+    return points
+
+def uColumn(table):
+    points = 0
+
+    for i in range(COLS):
+        for j in range(3):
+            xCount = 0
+            oCount = 0
+
+            for k in range(j, j + 4):
+                if table[k][i] == 'X ': xCount += 1
+                elif table[k][i] == 'O ': oCount += 1
+
+            if xCount > 0 and oCount == 0:
+                if xCount == 1: points += 1
+                elif xCount == 2: points += 10
+                elif xCount == 3: points += 50
+
+            elif xCount == 0 and oCount > 0:
+                if oCount == 1: points -= 1
+                elif oCount == 2: points -= 10
+                elif oCount == 3: points -= 50
+
+            else: continue
+
+    return points
+
+def uDiagonal(table):
+    points = 0
+
+    for i in range(3):
+        for j in range(4):
+            xCount = 0
+            oCount = 0
+
+            for k in range(4):
+                if table[i + k][j + k] == 'X ': xCount += 1
+                elif table[i + k][j + k] == 'O ': oCount += 1
+
+            if xCount > 0 and oCount == 0:
+                if xCount == 1: points += 1
+                elif xCount == 2: points += 10
+                elif xCount == 3: points += 50
+
+            elif xCount == 0 and oCount > 0:
+                if oCount == 1: points -= 1
+                elif oCount == 2: points -= 10
+                elif oCount == 3: points -= 50
+
+            else: continue
 
     return points
 
