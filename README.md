@@ -1,7 +1,7 @@
 # 4_In_A_Line
 4 em linha
 
-### p.py
+## p2.py
 Meti so uma visualização, não da para interagir sem ser pelo terminal
 
 
