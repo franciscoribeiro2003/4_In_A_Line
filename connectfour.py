@@ -153,6 +153,8 @@ def check(table, symbol):
 
 #Points of a certain movement
 def utility(table):
+    if check(table, 'X '): return 512
+    elif check(table, 'O '): return -512
     return uLine(table) + uColumn(table) + uDiagonal(table)
 
 def uLine(table):
