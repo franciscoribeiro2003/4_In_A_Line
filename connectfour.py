@@ -68,7 +68,7 @@ def game(table):
                 print("Make a move by choosing your coordinates to play (1 to 7).")
                 col = choice(table)
         
-        m = move(table, currentSymbol, col)
+        m = move(table, col)
         if m != -1: table[m][col] = currentSymbol
 
         #Verifying if there's a winner
@@ -111,18 +111,17 @@ def choice(table):
 
         return col
     
-#CPU picking column (USAR UMA FUNCAO QUE CALCULE MINIMAX, ALPHA BETA, MCTS)
+#CPU picking column 
 def cpuMove(cpu, table, symbol):
     if cpu == 1:
-        values = minimax(table, 4, symbol, -1)
-        return values[1]
+        return minimax(table, 4, symbol)
     elif cpu == 2:
-        return alphabeta(table)
+        return alphabeta(table, 8, symbol)
     else:
         return mcts(table)
 
 #Makes the move and returns its utility value
-def move(t, symbol, col):
+def move(t, col):
     row = -1
 
     for r in range(ROWS-1, -1, -1): 
@@ -247,56 +246,113 @@ def uDiagonal(table):
 
     return points
 
-#Minimax Algorithm
-def minimax(table, depth, symbol, col):
-    if depth == 0 or check(table, 'X ') or check(table, 'O '):
-        return (utility(table), col)
-    
-    if symbol == 'X ':
-        maxEval = -math.inf
-        bestMove = col
+# Minimax Algorithm
+def minimax(table, depth, symbol):
+    if symbol == 'X ': v = max_value(table, depth, -1)
+    else: v = min_value(table, depth, -1)
 
-        for i in range(7):
-            cloneTable = [row[:] for row in table]
-            m = move(cloneTable, symbol, i)
+    return v[1]
 
-            if m != -1:
-                cloneTable[m][i] == symbol
-                values = minimax(cloneTable, depth - 1, 'O ', i)
-                eval = values[0]
+def max_value(table, depth, col):
+    if depth == 0: return (utility(table), col)
 
-                if eval > maxEval:
-                    maxEval = eval
-                    bestMove = i
-            else: continue
+    max_v = -math.inf
+    best_move = col
+
+    for i in range(7):
+        childTable = [row[:] for row in table]
+
+        m = move(childTable, i)
+        if m == -1: continue
         
-        return (maxEval, bestMove)
-    
-    else:
-        minEval = math.inf
-        bestMove = col
+        childTable[m][i] = 'X '
+        mv = min_value(childTable, depth - 1, i)
+        
+        if mv[0] > max_v:
+            max_v = mv[0]
+            best_move = i
 
-        for i in range(7):
-            cloneTable = [row[:] for row in table]
-            m = move(cloneTable, symbol, i)
+    return (max_v, best_move)
 
-            if m != -1:
-                cloneTable[m][i] = symbol
-                values = minimax(cloneTable, depth - 1, 'X ', i)
-                eval = values[0]
+def min_value(table, depth, col):
+    if depth == 0: return (utility(table), col)
 
-                if eval < minEval:
-                    minEval = eval
-                    bestMove = i
+    min_v = math.inf
+    best_move = col
 
-            else: continue
+    for i in range(7):
+        childTable = [row[:] for row in table]
 
-        return (minEval, bestMove)
+        m = move(childTable, i)
+        if m == -1: continue
+        
+        childTable[m][i] = 'O '
+        mv = max_value(childTable, depth - 1, i)
+        
+        if mv[0] < min_v:
+            min_v = mv[0]
+            best_move = i
 
+    return (min_v, best_move)
 
 #Alpha Beta Algorithm
-def alphabeta(table):
-    return random.randint(0,6)
+def alphabeta(table, depth, symbol):
+    if symbol == 'X ': v = alphabeta_max(table, depth, -math.inf, math.inf, -1)
+    else: v = alphabeta_min(table, depth, -math.inf, math.inf, -1)
+
+    return v[1]
+
+def alphabeta_max(table, depth, alpha, beta, col):
+    if depth == 0: return (utility(table), col)
+
+    max_v = -math.inf
+    best_move = col
+
+    for i in range(7):
+        childTable = [row[:] for row in table]
+
+        m = move(childTable, i)
+        if m == -1: continue
+        
+        childTable[m][i] = 'X '
+        mv = alphabeta_min(childTable, depth - 1, alpha, beta, i)
+        
+        if mv[0] >= beta:
+            return (mv[0], i)
+        
+        if mv[0] > max_v:
+            max_v = mv[0]
+            best_move = i
+        
+        alpha = max(alpha, mv[0])
+
+    return (max_v, best_move)
+
+def alphabeta_min(table, depth, alpha, beta, col):
+    if depth == 0: return (utility(table), col)
+
+    min_v = math.inf
+    best_move = col
+
+    for i in range(7):
+        childTable = [row[:] for row in table]
+
+        m = move(childTable, i)
+        if m == -1: continue
+        
+        childTable[m][i] = 'O '
+        mv = alphabeta_max(childTable, depth - 1, alpha, beta, i)
+        
+        if mv[0] <= alpha:
+            return (mv[0], i)
+      
+        if mv[0] < min_v:
+            min_v = mv[0]
+            best_move = i
+        
+        beta = min(beta, mv[0])
+
+    return (min_v, best_move)
 
 #MCTS Algorithm
 def mcts(table):
