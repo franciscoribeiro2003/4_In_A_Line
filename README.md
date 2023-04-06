@@ -12,6 +12,3 @@
 **requisitos**
 - install `pygame` com `pip install pygame`
 
-
-## p4.py
-**Verificar ficheiro time.md com um teste do minimax**
