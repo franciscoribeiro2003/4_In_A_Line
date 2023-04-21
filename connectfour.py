@@ -1,135 +1,101 @@
 import random
+import time
 import math
+from copy import deepcopy
+import pygame
+import os
 
-table = [['- ','- ','- ','- ','- ','- ','- '],
-         ['- ','- ','- ','- ','- ','- ','- '],
-         ['- ','- ','- ','- ','- ','- ','- '],
-         ['- ','- ','- ','- ','- ','- ','- '],
-         ['- ','- ','- ','- ','- ','- ','- '],
-         ['- ','- ','- ','- ','- ','- ','- ']]
+os.environ["SDL_VIDEODRIVER"] = "dummy"
+
+# Initialize pygame
+pygame.init()
+
+# Define colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+
+# Set the width and height of the screen
+size = (800, 700)
+screen = pygame.display.set_mode(size)
+
+# Set the caption of the window
+pygame.display.set_caption("Connect Four")
+
+# Set the font for the text
+font = pygame.font.Font(None, 36)
 
 ROWS = 6
 COLS = 7
-symbols = ['X ', 'O ']
+SYMBOLS = ['X', 'O']
 
-#Play the Game
-def game(table):
-    print("Welcome to Connect Four! The player with the X piece start first.")
-    currentSymbol = symbols[0] #Player one
-    first = False #Decides if human plays first or not
+# Initialize the game board
+board = [['-'] * COLS for _ in range(ROWS)]
 
-    #Player chooses the piece he wants to play
+# Prints the game board
+def print_board():
+    for i in range(6):
+        for j in range(7):
+            print(board[i][j], end=' ')
+        print()
+    print('1 2 3 4 5 6 7\n')
+    print()
+
+
+# Prompts the user to choose X or O
+def choose_symbol():
     while True:
-        player = input("Choose X or O: ")
-        if player == 'X':
-            first = True
-            break
-        elif player == 'O':
-            break
-        else:
-            print("Please, pick X or O")
+        symbol = input("Choose X(RED, start first) or O(BLACK): ")
+        if symbol in SYMBOLS:
+            return symbol
+        
+def empate():
+    if all('-' not in row for row in board):
+        print_board()
+        print("It's a tie!")
+        return True
+    return False
 
-    #Player chooses with difficulty he wants to play
-    print("Choose the algorithm you want to play against:\n")
+def not_symbol(symbol):
+    if symbol == SYMBOLS[0]:
+        return SYMBOLS[1]
+    else:
+        return SYMBOLS[0]
+        
+# Prompts the user to choose the difficulty level
+def choose_difficulty():
+    print("Choose the algorithm you want to play against:")
     print("1: Minimax | 2: Alpha Beta | 3: MCTS")
     while True:
         try:
-            cpu = int(input())
-            break
+            return int(input())
         except ValueError:
             print("Please type a number.")
-            print()
 
-        if cpu < 1 or cpu > 3:
-            print("Please type a number beetwen 1 and 3")
-            print()
 
-    while True:
-        printTable()
-        print("1  2  3  4  5  6  7")
-
-        if first:
-            if currentSymbol == symbols[0]:
-                print("\nIt is now your turn.")
-                print("Make a move by choosing your coordinates to play (1 to 7).")
-                col = choice(table)
-            
-            else:
-                print("\nIt is now the CPU turn.")
-                col = cpuMove(cpu, table, symbols[1])
-
-        else:
-            if currentSymbol == symbols[0]:
-                print("\nIt is now the CPU turn.")
-                col = cpuMove(cpu, table, currentSymbol)
-
-            else:
-                print("\nIt is now your turn.")
-                print("Make a move by choosing your coordinates to play (1 to 7).")
-                col = choice(table)
-        
-        m = move(table, col)
-        if m != -1: table[m][col] = currentSymbol
-
-        #Verifying if there's a winner
-        if check(table, currentSymbol):
-            printTable()
-            print("Player {} has won!".format(currentSymbol))
-            break
-
-        if all('- ' not in row for row in table): #Verifying draw
-            print("That's a draw!")
-            break
-
-        currentSymbol = symbols[(symbols.index(currentSymbol) + 1) % 2] #Change player
-
-#Print Table
-def printTable():
-    print()
-    for i in range(6):
-        for j in range(7):
-            print(table[i][j], end=' ')
-        print()
-    print()
-
-#Player picking column
-def choice(table):
+# Gets a legal move from the user
+def get_move():
     while True:
         try:
-            col = int(input()) - 1 #Player chooses movement
+            col = int(input("Make a move by choosing your column (1 to 7): ")) - 1
+            if col < 0 or col >= COLS or board[0][col] != '-':
+                raise ValueError
+            return col
         except ValueError:
-            print("Please type a number.")
-            print()
-
-        if col < 0 or col >= COLS: #Checking the limits
             print("That's an illegal move, try again.")
-            continue
 
-        elif table[0][col] != '- ': #Checking if it's occupied
-            print("That's an illegal move, try again.")
-            continue
 
-        return col
-    
-#CPU picking column 
-def cpuMove(cpu, table, symbol):
-    if cpu == 1:
-        return minimax(table, 4, symbol)
-    elif cpu == 2:
-        return alphabeta(table, 8, symbol)
-    else:
-        return mcts(table)
 
-#Makes the move and returns its utility value
-def move(t, col):
-    row = -1
 
-    for r in range(ROWS-1, -1, -1): 
-        if t[r][col] == '- ':
-            row = r
-            break
+# Makes a move on the board and returns the row where the piece landed
+def make_move(symbol, col):
+    for row in range(ROWS-1, -1, -1):
+        if board[row][col] == '-':
+            board[row][col] = symbol
+            return True
+    return False
 
-    return row
+
 
 #Checking if there's four in line
 def check(table, symbol):
@@ -159,203 +125,347 @@ def check(table, symbol):
 
     return False
 
-#Points of a certain movement
+
+    
+# Calculate the utility of the table
 def utility(table):
-    if check(table, 'X '): return 512
-    elif check(table, 'O '): return -512
-    return uLine(table) + uColumn(table) + uDiagonal(table)
-
-#Utility points from the lines
-def uLine(table):
+    if check(table, 'X'):
+        return 1000
+    elif check(table, 'O'):
+        return -1000
+    else:
+        return uTable(table)
+    
+# Utility points from the table
+def uTable(table):
     points = 0
-
-    for i in range(ROWS):
-        for j in range(4):
-            xCount = 0
-            oCount = 0
-
-            for k in range(j, j + 4):
-                if table[i][k] == 'X ': xCount += 1
-                elif table[i][k] == 'O ': oCount += 1
-
-            if xCount > 0 and oCount == 0:
-                if xCount == 1: points += 1
-                elif xCount == 2: points += 10
-                elif xCount == 3: points += 50
-
-            elif xCount == 0 and oCount > 0:
-                if oCount == 1: points -= 1
-                elif oCount == 2: points -= 10
-                elif oCount == 3: points -= 50
-
-            else: continue
-
+    
+    # Count X and O values in each row, column, and diagonal
+    rows = table
+    cols = [[table[j][i] for j in range(ROWS)] for i in range(COLS)]
+    diags = [[table[i+k][j+k] for k in range(4)] for i in range(ROWS-3) for j in range(COLS-3)] + [[table[i+k][j-k+3] for k in range(4)] for i in range(ROWS-3) for j in range(COLS-3)]
+    
+    # Calculate utility points for each row, column, and diagonal
+    for line in rows + cols + diags:
+        x_count = line.count('X')
+        o_count = line.count('O')
+        
+        if x_count > 0 and o_count == 0:
+            if x_count == 1: points += 1
+            elif x_count == 2: points += 10
+            elif x_count == 3: points += 50
+        elif x_count == 0 and o_count > 0:
+            if o_count == 1: points -= 1
+            elif o_count == 2: points -= 10
+            elif o_count == 3: points -= 50
+    
     return points
 
-#Utility points from the column
-def uColumn(table):
-    points = 0
 
-    for i in range(COLS):
-        for j in range(3):
-            xCount = 0
-            oCount = 0
+# Undo the move
+def undo_move(thisboard,col, row):
+    thisboard[row][col] = '-'
 
-            for k in range(j, j + 4):
-                if table[k][i] == 'X ': xCount += 1
-                elif table[k][i] == 'O ': oCount += 1
+def move_selected(thisboard,symbol, col):
+    for row in range(ROWS-1, -1, -1):
+        if thisboard[row][col] == '-':
+            thisboard[row][col] = symbol
+            return row
+    return None
 
-            if xCount > 0 and oCount == 0:
-                if xCount == 1: points += 1
-                elif xCount == 2: points += 10
-                elif xCount == 3: points += 50
 
-            elif xCount == 0 and oCount > 0:
-                if oCount == 1: points -= 1
-                elif oCount == 2: points -= 10
-                elif oCount == 3: points -= 50
+def legal_moves(table):
+    #retorna uma lista de inteiros com as colunas que podem ser jogadas
+    lista = []
+    for col in range(COLS):
+        if table[0][col] == '-':
+            lista += [col]
+    return lista
 
-            else: continue
+def game_over(thisboard, symbol):
+    return check(thisboard, symbol) or len(legal_moves(thisboard)) == 0
 
-    return points
 
-#Utility points from the diagonals
-def uDiagonal(table):
-    points = 0
-
-    for i in range(3):
-        for j in range(4):
-            xCount = 0
-            oCount = 0
-
-            for k in range(4):
-                if table[i + k][j + k] == 'X ': xCount += 1
-                elif table[i + k][j + k] == 'O ': oCount += 1
-
-            if xCount > 0 and oCount == 0:
-                if xCount == 1: points += 1
-                elif xCount == 2: points += 10
-                elif xCount == 3: points += 50
-
-            elif xCount == 0 and oCount > 0:
-                if oCount == 1: points -= 1
-                elif oCount == 2: points -= 10
-                elif oCount == 3: points -= 50
-
-            else: continue
-
-    return points
+# Gets a legal move from the CPU using the selected algorithm
+def get_cpu_move(difficulty,NotSymbol):
+    if difficulty == 1:
+        return minimax(board, 4, NotSymbol)[1]
+    elif difficulty == 2:
+        return alphabeta(board, 6, NotSymbol, -math.inf, math.inf)[1]
+    else:
+        return mcts(board, NotSymbol)
 
 # Minimax Algorithm
-def minimax(table, depth, symbol):
-    if symbol == 'X ': v = max_value(table, depth, -1)
-    else: v = min_value(table, depth, -1)
-
-    return v[1]
-
-def max_value(table, depth, col):
-    if depth == 0: return (utility(table), col)
-
-    max_v = -math.inf
-    best_move = col
-
-    for i in range(7):
-        childTable = [row[:] for row in table]
-
-        m = move(childTable, i)
-        if m == -1: continue
-        
-        childTable[m][i] = 'X '
-        mv = min_value(childTable, depth - 1, i)
-        
-        if mv[0] > max_v:
-            max_v = mv[0]
-            best_move = i
-
-    return (max_v, best_move)
-
-def min_value(table, depth, col):
-    if depth == 0: return (utility(table), col)
-
-    min_v = math.inf
-    best_move = col
-
-    for i in range(7):
-        childTable = [row[:] for row in table]
-
-        m = move(childTable, i)
-        if m == -1: continue
-        
-        childTable[m][i] = 'O '
-        mv = max_value(childTable, depth - 1, i)
-        
-        if mv[0] < min_v:
-            min_v = mv[0]
-            best_move = i
-
-    return (min_v, best_move)
+def minimax(thisboard, depth, symbol):
+    best_move=-1
+    if depth==0 or game_over(thisboard, symbol):
+        return utility(thisboard), None
+    
+    if symbol == 'X':
+        maxEval = -math.inf
+        #for each child
+        for col in (legal_moves(thisboard)):
+            row = move_selected(thisboard,symbol, col)
+            eval = minimax(thisboard, depth-1, not_symbol(symbol))[0]
+            undo_move(thisboard, col, row)
+            if eval>maxEval:
+                maxEval = eval
+                best_move=col
+        return maxEval,best_move
+    
+    else:
+        minEval = math.inf
+        #for each child
+        for col in (legal_moves(thisboard)):
+            row = move_selected(thisboard,symbol, col)
+            eval = minimax(thisboard, depth-1, not_symbol(symbol))[0]
+            undo_move(thisboard, col, row)
+            if eval<minEval:
+                minEval = eval
+                best_move=col
+        return minEval, best_move
 
 #Alpha Beta Algorithm
-def alphabeta(table, depth, symbol):
-    if symbol == 'X ': v = alphabeta_max(table, depth, -math.inf, math.inf, -1)
-    else: v = alphabeta_min(table, depth, -math.inf, math.inf, -1)
+def alphabeta(thisboard, depth,symbol , alpha, beta):
+    best_move=None
+    if depth==0 or game_over(thisboard, symbol):
+        return utility(thisboard), None
+    
+    if symbol == 'X':
+        maxEval = -math.inf
+        #for each child
+        for col in (legal_moves(thisboard)):
+            row = move_selected(thisboard,symbol, col)
+            eval = alphabeta(thisboard, depth-1, not_symbol(symbol), alpha, beta)[0]
+            undo_move(thisboard, col, row)
+            if eval>maxEval:
+                maxEval = eval
+                best_move=col
+            alpha= max(alpha, maxEval)
+            if beta<=alpha: break
+        return maxEval,best_move
 
-    return v[1]
+    else:
+        minEval = math.inf
+        #for each child
+        for col in (legal_moves(thisboard)):
+            row = move_selected(thisboard,symbol, col)
+            eval = alphabeta(thisboard, depth-1, not_symbol(symbol), alpha, beta)[0]
+            undo_move(thisboard, col, row)
+            if eval<minEval:
+                minEval = eval
+                best_move=col
+            beta= min(beta, minEval)
+            if beta<=alpha: break
+        return minEval, best_move
+    
 
-def alphabeta_max(table, depth, alpha, beta, col):
-    if depth == 0: return (utility(table), col)
+#MCTS Algorithm (Trocar pela classe)
+def mcts(table, symbol):   
+    class Node:
+        def __init__(self, move, parent):
+            self.move = move
+            self.parent = parent
+            self.N = 0
+            self.Q = 0
+            self.children = {}
 
-    max_v = -math.inf
-    best_move = col
+        def add_children(self, children: dict) -> None:
+            for child in children:
+                self.children[child.move] = child
 
-    for i in range(7):
-        childTable = [row[:] for row in table]
+        #função Upper Confidence Bound (UCB)
+        def UCB(self):
+            if self.N == 0:
+                return 0 if math.sqrt(2) == 0 else float('inf')
+            return self.Q / self.N + math.sqrt(2) * math.sqrt(math.log(self.parent.N) / self.N)
 
-        m = move(childTable, i)
-        if m == -1: continue
+
+    class MCTS:
+        def __init__(self, state, symbol):
+            self.root_state = deepcopy(state)
+            self.symbol = symbol
+            self.root = Node(None, None)
+            self.run_time = 0
+            self.node_count = 0
+            self.num_rollouts = 0
+
+        def select_node(self) -> tuple:
+            node = self.root
+            state = deepcopy(self.root_state)
+
+            while len(node.children) != 0:
+                children = node.children.values()
+                max_value = max(children, key=lambda n: n.UCB()).UCB()
+                max_nodes = [n for n in children if n.UCB() == max_value]
+
+                #choices = legal_moves(state)
+                node = random.choice(max_nodes)
+                move_selected(state, symbol ,node.move)
+
+                if node.N == 0:
+                    return node, state
+
+            if self.expand(node, state):
+                node = random.choice(list(node.children.values()))
+                move_selected(state, self.symbol, node.move)
+
+            return node, state
+
+        def expand(self, parent: Node, state) -> bool:
+            if check(state, self.symbol):
+                return False
+
+            children = [Node(move, parent) for move in legal_moves(state)]
+            parent.add_children(children)
+
+            return True
+
+        def roll_out(self, state):
+            while not check(state, self.symbol):
+                move_selected(state, self.symbol ,random.choice(legal_moves(state)))
+
+            return check(state, symbol)
+
+        def back_propagate(self, node: Node, outcome) -> None:
+
+            # For the current player, not the next player
+            reward = 0 if outcome else 1
+
+            while node is not None:
+                node.N += 1
+                node.Q += reward
+                node = node.parent
+                if empate():
+                    reward = 0
+                else:
+                    reward = 1 - reward
+
+        def search(self, time_limit: int):
+            start_time = time.process_time()
+
+            num_rollouts = 0
+            while time.process_time() - start_time < time_limit:
+                node, state = self.select_node()
+                outcome = self.roll_out(state)
+                self.back_propagate(node, outcome)
+                num_rollouts += 1
+
+            run_time = time.process_time() - start_time
+            self.run_time = run_time
+            self.num_rollouts = num_rollouts
+
+        def best_move(self):
+            if check(self.root_state, self.symbol):
+                return -1
+
+            max_value = max(self.root.children.values(), key=lambda n: n.N).N
+            max_nodes = [n for n in self.root.children.values() if n.N == max_value]
+            best_child = random.choice(max_nodes)
+
+            return best_child.move
+
+        def move(self, move):
+            if move in self.root.children:
+                self.root_state.move(move)
+                self.root = self.root.children[move]
+                return
+
+            self.root_state.move(move)
+            self.root = Node(None, None)
+
+        def statistics(self) -> tuple:
+            return self.num_rollouts, self.run_time
+    
+    mcts = MCTS(table, symbol)
+    mcts.search(4)
+    move = mcts.best_move()
+    return move_selected(table, symbol, move)
+
+
+# Define a function to draw the game board
+def draw_board(board, player_turn):
+    # Clear the screen
+    screen.fill(WHITE)
+
+    # Draw the game board
+    for row in range(6):
+        for col in range(7):
+            pygame.draw.rect(screen, BLACK, [col*100+50, row*100+50, 100, 100], 2)
+            if board[row][col] == 'X':
+                pygame.draw.circle(screen, RED, [col*100+100, row*100+100], 45)
+            elif board[row][col] == 'O':
+                pygame.draw.circle(screen, BLACK, [col*100+100, row*100+100], 45)
+
+    # Draw the player's turn text
+    player_text = font.render("Player " + player_turn + "'s turn", True, BLACK)
+    screen.blit(player_text, [50, 10])
+
+    # Update the display
+    pygame.display.update()
+
+#game loop
+def main():
+    print("Welcome to Connect 4!")
+    print("Good luck!")
+    print()
+    
+    symbol = choose_symbol()
+    atual = 'X'
+    difficulty = choose_difficulty()
+    print()
+    
+    while True:
+        print_board()
+        draw_board(board, symbol)
         
-        childTable[m][i] = 'X '
-        mv = alphabeta_min(childTable, depth - 1, alpha, beta, i)
+        if (atual=='X' and atual==symbol):
+            col = get_move()
+            row = make_move(symbol, col)
+            if check(board, atual):
+                print_board()
+                print("You won!")
+                print_board()
+                break
+            elif empate(): break
+
+
+        elif (atual=='X' and atual!=symbol):
+            col = get_cpu_move(difficulty, atual)
+            #print(col)
+            row = make_move(atual, col)
+            if check(board, atual):
+                print_board()
+                print("CPU won!")
+                print_board()
+                break
+            elif empate(): break
+
+
+        elif (atual=='O' and atual!=symbol):
+            col = get_cpu_move(difficulty, atual)
+            #print(col)
+            row = make_move(atual, col)
+            if check(board, atual):
+                print_board()
+                print("CPU won!")
+                print_board()
+                break
+            elif empate(): break
+
+
+        elif (atual=='O' and atual==symbol):
+            col = get_move()
+            row = make_move(symbol, col)
+            if check(board, atual):
+                print_board()
+                print("You won!")
+                print_board()
+                break
+            elif empate(): break
         
-        if mv[0] >= beta:
-            return (mv[0], i)
+        atual=not_symbol(atual)
         
-        if mv[0] > max_v:
-            max_v = mv[0]
-            best_move = i
-        
-        alpha = max(alpha, mv[0])
 
-    return (max_v, best_move)
-
-def alphabeta_min(table, depth, alpha, beta, col):
-    if depth == 0: return (utility(table), col)
-
-    min_v = math.inf
-    best_move = col
-
-    for i in range(7):
-        childTable = [row[:] for row in table]
-
-        m = move(childTable, i)
-        if m == -1: continue
-        
-        childTable[m][i] = 'O '
-        mv = alphabeta_max(childTable, depth - 1, alpha, beta, i)
-        
-        if mv[0] <= alpha:
-            return (mv[0], i)
-      
-        if mv[0] < min_v:
-            min_v = mv[0]
-            best_move = i
-        
-        beta = min(beta, mv[0])
-
-    return (min_v, best_move)
-
-#MCTS Algorithm
-def mcts(table):
-    return random.randint(0,6)
-
-game(table)
+if __name__ == "__main__":
+    main()
