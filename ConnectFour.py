@@ -8,10 +8,31 @@ import os
 # Initialize pygame
 pygame.init()
 
+# Define depth
+DEPTH = 5
+
 # Define colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
+
+#contadores
+time_total = 0
+nodes_total = 0
+
+def atualizar_count(time, nodes):
+    global time_total
+    global nodes_total
+    time_total+= time 
+    nodes_total += nodes
+
+def print_count():
+    global time_total
+    global nodes_total
+    print("Total time CPU played: ", time_total)
+    print("Total nodes created: ", nodes_total)
+    time_total = 0
+    nodes_total = 0
 
 # Set the width and height of the screen
 size = (800, 700)
@@ -188,19 +209,21 @@ def game_over(thisboard, symbol):
 def get_cpu_move(difficulty,NotSymbol):
     if difficulty == 1:
         start_time = time.time()  # start timer
-        move=minimax(board, 6, NotSymbol,0)
+        move=minimax(board, DEPTH, NotSymbol,0)
         end_time = time.time()  # end timer
         time_taken = end_time - start_time  # calculate time taken
         print("Time taken:", time_taken)  # print time taken
         print("Nodes visited:", move[2])
+        atualizar_count(time_taken,move[2])
         return move[1]
     elif difficulty == 2:
         start_time = time.time()  # start timer
-        move=alphabeta(board,6, NotSymbol, -math.inf, math.inf,0)
+        move=alphabeta(board,DEPTH, NotSymbol, -math.inf, math.inf,0)
         end_time = time.time()  # end timer
         time_taken = end_time - start_time  # calculate time taken
         print("Time taken:", time_taken)  # print time taken
         print("Nodes visited:", move[2])
+        atualizar_count(time_taken,move[2])
         return move[1]; 
     else:
         start_time = time.time()  # start timer
@@ -451,9 +474,9 @@ def main():
             col = get_move()
             row = make_move(symbol, col)
             if check(board, atual):
-                print_board()
                 print("You won!")
                 print_board()
+                print_count()
                 break
             elif empate(): break
 
@@ -463,9 +486,9 @@ def main():
             #print(col)
             row = make_move(atual, col)
             if check(board, atual):
-                print_board()
                 print("CPU won!")
                 print_board()
+                print_count()
                 break
             elif empate(): break
 
@@ -475,9 +498,9 @@ def main():
             #print(col)
             row = make_move(atual, col)
             if check(board, atual):
-                print_board()
                 print("CPU won!")
                 print_board()
+                print_count()
                 break
             elif empate(): break
 
@@ -486,9 +509,9 @@ def main():
             col = get_move()
             row = make_move(symbol, col)
             if check(board, atual):
-                print_board()
                 print("You won!")
                 print_board()
+                print_count()
                 break
             elif empate(): break
         
