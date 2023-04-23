@@ -1,6 +1,6 @@
 # Connect Four
 Autores: Francisco Ribeiro, Matheus Bissacot, Sérgio Coelho
-- [https://github.com/franciscoribeiro2003/4_In_A_Line](Link do Repositorio)
+- [Link do Repositorio](https://github.com/franciscoribeiro2003/4_In_A_Line)
 ## Requisitos
 Para ser possıvel correr o programa  ́e necessario ter python instalado assim como a biblioteca pygame.
 - Python preferencialmente Python3.
