@@ -1,5 +1,5 @@
 # Connect Four
-Autores: Francisco Ribeiro, Matheus Bissacot, Sérgio Coelho
+Autores: [Francisco Ribeiro](https://github.com/franciscoribeiro2003), [Matheus Bissacot](https://github.com/MatheusBissacot) e [Sérgio Coelho](https://github.com/sergioccoelho).
 ## Requisitos
 Para ser possıvel correr o programa  ́e necessario ter python instalado assim como a biblioteca pygame.
 - Python preferencialmente Python3.
